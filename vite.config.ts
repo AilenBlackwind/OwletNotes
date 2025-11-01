@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           input: {
             main: path.resolve(__dirname, 'index.html'),
-            background: path.resolve(__dirname, 'src/background.js'),
+            background: path.resolve(__dirname, 'background.js'),
           },
           output: {
             entryFileNames: (chunkInfo) => {
