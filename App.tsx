@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
+declare global {
+  interface Window {
+    OBR?: any;
+  }
+}
+
 declare const OBR: any;
 
 // Unique plugin ID (required for metadata)
@@ -54,20 +60,37 @@ const App: React.FC = () => {
   // Initialize the extension
   useEffect(() => {
     const init = async () => {
+      console.log("=== EXTENSION INIT START ===");
+      console.log("typeof OBR:", typeof OBR);
+      console.log("OBR object:", OBR);
+      console.log("window.OBR:", window.OBR);
+      console.log("location.href:", window.location.href);
+      
       if (typeof OBR === 'undefined') {
-        console.log("Running in standalone mode - no OBR API");
+        console.log("❌ OBR API not detected - running standalone");
         setStatus('idle');
         return;
       }
 
       try {
-        console.log("Initializing OBR extension...");
+        console.log("✅ OBR API detected - initializing extension...");
+        console.log("OBR properties:", Object.keys(OBR));
         
-        // Required: OBR.onReady() for proper initialization
+        // Check if we have the required methods
+        if (!OBR.onReady || !OBR.contextMenu || !OBR.scene || !OBR.player) {
+          console.error("❌ OBR API incomplete - missing required methods");
+          setStatus('idle');
+          return;
+        }
+        
+        console.log("✅ OBR API methods available");
+        
+        console.log("Calling OBR.onReady...");
         await OBR.onReady();
-        console.log("OBR is ready!");
+        console.log("✅ OBR.onReady completed!");
         
         // Set up context menu for adding notes to tokens
+        console.log("Setting up context menu...");
         await setupContextMenu();
         
         // Check if we're coming from a context menu action
@@ -76,15 +99,17 @@ const App: React.FC = () => {
         const tokenId = urlParams.get('tokenId');
         
         if (action === 'edit-notes' && tokenId) {
-          console.log("Opening notes editor for token:", tokenId);
+          console.log("📝 Opening notes editor for token:", tokenId);
           setSelectedItemId(tokenId);
           await loadTokenNotes(tokenId);
         }
         
+        console.log("=== EXTENSION INIT COMPLETE ===");
         setStatus('idle');
         
       } catch (error) {
-        console.error("Failed to initialize:", error);
+        console.error("❌ Failed to initialize extension:", error);
+        console.error("Error details:", error.message, error.stack);
         setStatus('idle');
       }
     };
