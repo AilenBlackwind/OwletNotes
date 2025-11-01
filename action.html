@@ -6,6 +6,17 @@
     <title>Token Notes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://aistudiocdn.com/@uiw/react-md-editor@4.0.7/esm/style.min.css" />
+    <style>
+      /* Hide specific buttons in MD editor toolbar */
+      button[data-name="preview"],
+      button[data-name="live"],
+      button[data-name="edit"],
+      .w-md-editor-bar button:nth-of-type(6),
+      .w-md-editor-bar button:nth-of-type(7),
+      .w-md-editor-bar button:nth-of-type(8) {
+        display: none !important;
+      }
+    </style>
   </head>
   <body class="bg-transparent">
     <div id="root"></div>
