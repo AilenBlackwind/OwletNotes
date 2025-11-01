@@ -95,12 +95,22 @@ const App: React.FC = () => {
   // Set up context menu for tokens
   const setupContextMenu = async () => {
     try {
-      OBR.contextMenu.create({
-        id: `${PLUGIN_ID}/context-menu`,
+      console.log("=== CONTEXT MENU SETUP START ===");
+      console.log("Plugin ID:", PLUGIN_ID);
+      
+      // Get current role for debugging
+      const role = await OBR.player.getRole();
+      console.log("Current player role:", role);
+      
+      // Test context menu creation
+      console.log("Creating context menu with ID:", `${PLUGIN_ID}/context-menu`);
+      
+      const contextMenuResult = await OBR.contextMenu.create({
+        id: `${PLUGIN_ID}/context-menu-debug`,
         icons: [
           {
-            icon: "/note-icon.svg",
-            label: "Add/Edit Notes",
+            icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIgMThoMnYyaC0yeiIvPgo8cGF0aCBkPSJNMTIgM2MtNC40MTggMC04IDMuNTgyLTggOHMzLjU4MiA4IDggOEMxMC42NzEgMjEgMTcuMzI3IDEwLjA2IDIyIDZWN2MwLTMuMzEzLTIuNjg3LTYtNi02SDEzYy0zLjMxMyAwLTMuNjg3IDIuNjg3LTMuNjg3IDZTOS42ODcgMTMgMTMgMTNjMy4zMTMgMCA2LTIuNjg3IDYtNnYtMTRjMC0zLjMxMy0yLjY4Ny02LTYtNkgxNGMtMy4zMTMgMC02IDIuNjg3LTYgNnoiLz4KPC9zdmc+",
+            label: "DEBUG: Add Notes (No Icon)",
             filter: {
               roles: ["GM", "PLAYER"],
               every: [
@@ -108,29 +118,48 @@ const App: React.FC = () => {
                 { key: "layer", value: "TEXT", coordinator: "||" },
                 { key: "layer", value: "PROP", coordinator: "||" },
                 { key: "layer", value: "ATTACHMENT", coordinator: "||" },
+                { key: "layer", value: "MAP", coordinator: "||" },
               ],
             },
           },
         ],
         onClick(context) {
-          const tokenId = context.items[0].id;
-          console.log("Context menu clicked for token:", tokenId);
+          console.log("=== CONTEXT MENU CLICKED ===");
+          console.log("Context items:", context.items);
+          console.log("Context item count:", context.items.length);
           
-          // Open the extension with this token
-          OBR.action.open();
-          
-          // Navigate to the notes editor for this token
-          const extensionUrl = `${window.location.origin}${window.location.pathname}?action=edit-notes&tokenId=${tokenId}`;
-          window.history.pushState({}, '', extensionUrl);
-          
-          // Reload the page to show the notes editor
-          window.location.reload();
+          if (context.items && context.items.length > 0) {
+            const tokenId = context.items[0].id;
+            console.log("Token ID from context:", tokenId);
+            console.log("Token layer:", context.items[0].layer);
+            console.log("Token metadata:", context.items[0].metadata);
+            
+            // Open the extension with this token
+            console.log("Opening OBR action...");
+            OBR.action.open();
+            
+            // Navigate to the notes editor for this token
+            const extensionUrl = `${window.location.origin}${window.location.pathname}?action=edit-notes&tokenId=${tokenId}`;
+            console.log("Extension URL:", extensionUrl);
+            window.history.pushState({}, '', extensionUrl);
+            
+            // Reload the page to show the notes editor
+            console.log("Reloading page...");
+            window.location.reload();
+          } else {
+            console.error("No items in context!");
+          }
         },
       });
       
-      console.log("Context menu created successfully");
+      console.log("Context menu create result:", contextMenuResult);
+      console.log("=== CONTEXT MENU SETUP COMPLETE ===");
+      
     } catch (error) {
-      console.error("Failed to create context menu:", error);
+      console.error("=== CONTEXT MENU ERROR ===");
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Full error:", error);
     }
   };
 
