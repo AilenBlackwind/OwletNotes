@@ -1,12 +1,14 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 1,
   "name": "Token Notes",
   "version": "1.0.0",
-  "background": {
-    "scripts": ["/background.js"]
-  },
-  "permissions": [
-    { "id": "CONTEXT_MENU" },
-    { "id": "POPOVER" }
-  ]
+  "description": "A simple extension to add notes to tokens.",
+  "author": "AilenBlackwind",
+  "action": {
+    "title": "Token Notes",
+    "icon": "/icon.png",
+    "popover": "/index.html",
+    "width": 300,
+    "height": 400
+  }
 }
