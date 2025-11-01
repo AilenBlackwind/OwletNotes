@@ -5,11 +5,13 @@
   "action": {
     "title": "Token Notes",
     "icon": "./icon.png",
-    "popover": {
-      "url": "./index.html",
-      "width": 300,
-      "height": 400
-    },
+"action": {
+  "title": "Token Notes",
+  "icon": "./icon.png",
+  "popover": "./index.html",
+  "width": 300,             
+  "height": 400
+},
     "modes": [
       {
         "role": "CONTEXT",
