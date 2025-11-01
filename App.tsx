@@ -61,12 +61,13 @@ const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       console.log("=== EXTENSION INIT START ===");
-      console.log("typeof OBR:", typeof OBR);
-      console.log("OBR object:", OBR);
-      console.log("window.OBR:", window.OBR);
+      console.log("typeof (window as any).OBR:", typeof (window as any).OBR);
+      console.log("(window as any).OBR object:", (window as any).OBR);
       console.log("location.href:", window.location.href);
       
-      if (typeof OBR === 'undefined') {
+      // Check for OBR API using window object to avoid ReferenceError
+      const obbr = (window as any).OBR;
+      if (typeof obbr === 'undefined') {
         console.log("❌ OBR API not detected - running standalone");
         setStatus('idle');
         return;
@@ -74,10 +75,10 @@ const App: React.FC = () => {
 
       try {
         console.log("✅ OBR API detected - initializing extension...");
-        console.log("OBR properties:", Object.keys(OBR));
+        console.log("OBR properties:", Object.keys(obbr));
         
         // Check if we have the required methods
-        if (!OBR.onReady || !OBR.contextMenu || !OBR.scene || !OBR.player) {
+        if (!obbr.onReady || !obbr.contextMenu || !obbr.scene || !obbr.player) {
           console.error("❌ OBR API incomplete - missing required methods");
           setStatus('idle');
           return;
@@ -86,7 +87,7 @@ const App: React.FC = () => {
         console.log("✅ OBR API methods available");
         
         console.log("Calling OBR.onReady...");
-        await OBR.onReady();
+        await obbr.onReady();
         console.log("✅ OBR.onReady completed!");
         
         // Set up context menu for adding notes to tokens
