@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0"
+      }
+    }
+    </script>
+    <script>
+      // Mock OBR SDK for development outside of Owlbear Rodeo
+      if (typeof OBR === 'undefined') {
+        console.log("Setting up mock OBR object for development.");
+
+        const METADATA_KEY = "com.example.token-notes/metadata";
+
+        const localPlayer = {
+            id: 'mock-player-id',
+            role: 'PLAYER' // Change to 'GM' to test direct editing & locking
+        };
+        
+        const mockToken = {
+          id: 'mock-token-id',
+          createdUserId: 'mock-gm-id', // Different from localPlayer to test request flow
+          metadata: {
+            [METADATA_KEY]: {
+              notes: 'This is a collaborative note for the mock token.',
+              isLocked: false // Set to true to test locked state
+            }
+          }
+        };
+
+        const listeners = {
+            broadcast: {},
+            scene: []
+        };
+        
+        const broadcastListeners = {};
+        const sceneChangeListeners = [];
+
+        window.OBR = {
+          isReady: true,
+          onReady: (callback) => {
+            console.log("Mock OBR: onReady triggered.");
+            setTimeout(callback, 50); // Simulate async readiness
+          },
+          player: {
+            getSelection: () => {
+              console.log("Mock OBR: getSelection called.");
+              return Promise.resolve(['mock-token-id']);
+            },
+            getRole: () => {
+                console.log("Mock OBR: getRole called, returning", localPlayer.role);
+                return Promise.resolve(localPlayer.role);
+            },
+            getId: () => {
+                console.log("Mock OBR: getId called, returning", localPlayer.id);
+                return Promise.resolve(localPlayer.id);
+            }
+          },
+          scene: {
+            items: {
+              getItems: (ids) => {
+                console.log("Mock OBR: getItems called with", ids);
+                if (ids && ids.includes('mock-token-id')) {
+                  return Promise.resolve([JSON.parse(JSON.stringify(mockToken))]);
+                }
+                return Promise.resolve([]);
+              },
+              updateItems: (ids, mutator) => {
+                console.log("Mock OBR: updateItems called.");
+                if (ids && ids.includes('mock-token-id')) {
+                  const itemsToUpdate = [JSON.parse(JSON.stringify(mockToken))];
+                  mutator(itemsToUpdate);
+                  mockToken.metadata = itemsToUpdate[0].metadata;
+                  console.log('Mock OBR: Token updated with new metadata:', mockToken.metadata);
+                  
+                  // Trigger onChange listeners
+                  sceneChangeListeners.forEach(cb => cb([JSON.parse(JSON.stringify(mockToken))]));
+                }
+                return Promise.resolve();
+              },
+              onChange: (callback) => {
+                console.log("Mock OBR: Registered scene.items.onChange listener.");
+                sceneChangeListeners.push(callback);
+                return () => { // Return an unsubscribe function
+                  const index = sceneChangeListeners.indexOf(callback);
+                  if (index > -1) {
+                    sceneChangeListeners.splice(index, 1);
+                    console.log("Mock OBR: Unsubscribed scene.items.onChange listener.");
+                  }
+                };
+              }
+            },
+          },
+          broadcast: {
+              onMessage: (channel, callback) => {
+                  console.log(`Mock OBR: Registered broadcast listener for channel ${channel}`);
+                  if (!broadcastListeners[channel]) {
+                      broadcastListeners[channel] = [];
+                  }
+                  broadcastListeners[channel].push(callback);
+                  return () => { // Return an unsubscribe function
+                    const index = broadcastListeners[channel].indexOf(callback);
+                    if (index > -1) {
+                      broadcastListeners[channel].splice(index, 1);
+                      console.log(`Mock OBR: Unsubscribed broadcast listener for channel ${channel}`);
+                    }
+                  };
+              },
+              sendMessage: (message) => {
+                console.log("Mock OBR: Broadcasting message:", message);
+                // Simulate another user (a GM) receiving and processing the message
+                const gmClient = {
+                    id: 'mock-gm-id',
+                    role: 'GM'
+                };
+                
+                // Pretend we are the GM client and check permissions
+                const { tokenId, newNotes } = message.data;
+                const metadata = mockToken.metadata[METADATA_KEY] || {};
+
+                // GM checks if the note is locked before applying changes
+                if (metadata.isLocked) {
+                  console.log("Mock OBR (as GM): Note is locked. Ignoring edit request.");
+                  return Promise.resolve();
+                }
+
+                const isOwner = mockToken.createdUserId === gmClient.id;
+                const isGM = gmClient.role === 'GM';
+
+                if (isGM || isOwner) {
+                    console.log("Mock OBR (as GM): Permission granted, updating item.");
+                    // GM applies the change, which will trigger onChange for everyone
+                    window.OBR.scene.items.updateItems([tokenId], (items) => {
+                        if (items.length > 0) {
+                          if (!items[0].metadata[METADATA_KEY]) items[0].metadata[METADATA_KEY] = {};
+                          items[0].metadata[METADATA_KEY].notes = newNotes;
+                        }
+                    });
+                } else {
+                    console.log("Mock OBR (as GM): No permission to update.");
+                }
+
+                return Promise.resolve();
+              }
+          }
+        };
+      }
+    </script>
+  </head>
+  <body class="bg-transparent">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

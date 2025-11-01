@@ -1,0 +1,5 @@
+{
+  "name": "Owlbear Rodeo Token Notes",
+  "description": "An extension for Owlbear Rodeo 2.0 that allows users to add private notes to a single selected token. The notes are accessible via a popover from the context menu.",
+  "requestFramePermissions": []
+}
