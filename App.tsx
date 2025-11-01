@@ -67,7 +67,7 @@ const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [hasDirectPermissions, setHasDirectPermissions] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [previewMode, setPreviewMode] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   const canCurrentlyEdit = !isLocked || hasDirectPermissions;
 
@@ -75,6 +75,8 @@ const App: React.FC = () => {
     const metadata = item.metadata[METADATA_KEY] as { notes?: string; isLocked?: boolean } || {};
     setNotes(metadata.notes || '');
     setIsLocked(metadata.isLocked || false);
+    // Auto-enter edit mode for empty notes to guide user
+    setIsEditing(!metadata.notes);
   }, []);
 
   // Effect to initialize and load data
@@ -275,7 +277,10 @@ const App: React.FC = () => {
     }
 
     setStatus('saved');
-    setTimeout(() => setStatus('idle'), 2000);
+    setTimeout(() => {
+      setStatus('idle');
+      setIsEditing(false); // Auto-return to preview mode after saving
+    }, 2000);
   };
 
   if (status === 'loading') {
@@ -292,12 +297,20 @@ const App: React.FC = () => {
           <h1 className="text-lg font-bold text-slate-900">Token Notes</h1>
           <div className="flex gap-2">
             <button
-              onClick={() => setPreviewMode(!previewMode)}
+              onClick={() => {
+                if (isEditing) {
+                  // Cancel editing - restore original notes if needed
+                  setIsEditing(false);
+                } else {
+                  // Enter edit mode
+                  setIsEditing(true);
+                }
+              }}
               className="p-1 rounded-full hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              title={previewMode ? 'Edit' : 'Preview'}
-              aria-label={previewMode ? 'Edit' : 'Preview'}
+              title={isEditing ? 'Cancel Edit' : 'Edit'}
+              aria-label={isEditing ? 'Cancel Edit' : 'Edit'}
             >
-              {previewMode ? <EyeOffIcon /> : <EyeIcon />}
+              {isEditing ? <EyeOffIcon /> : <EyeIcon />}
             </button>
             {hasDirectPermissions && (
               <button
@@ -312,7 +325,7 @@ const App: React.FC = () => {
           </div>
       </div>
 
-      {!previewMode && canCurrentlyEdit && (
+      {isEditing && canCurrentlyEdit && (
         <div className="flex gap-1 mb-3 p-2 bg-slate-200 rounded-md">
           <button
             onClick={formatBold}
@@ -350,10 +363,10 @@ const App: React.FC = () => {
       )}
 
       <div className="flex-grow bg-white border border-slate-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 disabled:bg-slate-200 disabled:cursor-not-allowed" data-color-mode="light">
-        {previewMode ? (
+        {!isEditing ? (
           <div className="p-3 h-full overflow-auto text-slate-900">
             <div className="prose prose-sm max-w-none">
-              <MDEditor.Markdown source={notes || "*No notes added yet.*"} />
+              <MDEditor.Markdown source={notes || "*No notes added yet. Click Edit to add content.*"} />
             </div>
           </div>
         ) : (
@@ -361,7 +374,7 @@ const App: React.FC = () => {
             value={notes}
             onChange={(value) => setNotes(value || '')}
             hideToolbar={!canCurrentlyEdit || status === 'saving'}
-            height={200}
+            height={450}
             preview="edit"
             textareaProps={{
               placeholder: "Add a collaborative note for this token...",
