@@ -2,23 +2,11 @@
   "manifest_version": 2,
   "name": "Token Notes",
   "version": "1.0.0",
-  "action": {
-    "title": "Token Notes",
-    "icon": "./icon.png",
-    "popover": "./index.html",
-    "width": 300,
-    "height": 400
+  "background": {
+    "scripts": ["./background.js"]
   },
-  "modes": [
-    {
-      "role": "CONTEXT",
-      "modes": [
-        {
-          "id": "IMAGE",
-          "min": 1,
-          "max": 1
-        }
-      ]
-    }
+  "permissions": [
+    "CONTEXT_MENU",
+    "POPOVER"
   ]
 }
