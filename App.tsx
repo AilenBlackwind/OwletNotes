@@ -22,30 +22,6 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-const BoldIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M5 4v3h4.5C11.6 7 13 5.4 13 4c0-1.3-.9-2-2.5-2H5zM5 9v3h4.5c1.6 0 3-.6 3-1.5S11.1 9 9.5 9H5zM5 14v3h6c1.7 0 3-.9 3-2s-1.3-2-3-2H5z" />
-  </svg>
-);
-
-const ItalicIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M8 2h4l-2 16h-4l2-16z" />
-  </svg>
-);
-
-const UnderlineIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M6 2h8v2h-2v8.382c0 .586-.253 1.127-.68 1.464C10.653 14.308 10.3 14.5 9.9 14.5H9.1c-.4 0-.753-.192-1.42-.654C6.753 13.51 6.5 13.048 6.5 12.382V4h2V2H6zM4 18h12v2H4v-2z" />
-  </svg>
-);
-
-const ListIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M3 4.5A1.5 1.5 0 014.5 3h11A1.5 1.5 0 0117 4.5v11A1.5 1.5 0 0115.5 17h-11A1.5 1.5 0 013 15.5v-11zM5 7a1 1 0 100-2 1 1 0 000 2zm0 4a1 1 0 100-2 1 1 0 000 2zm0 4a1 1 0 100-2 1 1 0 000 2z" />
-  </svg>
-);
-
 const LockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
@@ -183,49 +159,6 @@ const App: React.FC = () => {
 
   }, [isReady]);
 
-  const formatText = (before: string, after: string = before) => {
-    if (!canCurrentlyEdit) return;
-    
-    const textarea = document.querySelector('.w-md-editor-text-input') as HTMLTextAreaElement;
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = notes.substring(start, end);
-    
-    const newText = notes.substring(0, start) + before + selectedText + after + notes.substring(end);
-    setNotes(newText);
-    
-    // Restore cursor position
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
-    }, 0);
-  };
-
-  const formatBold = () => formatText('**');
-  const formatItalic = () => formatText('*');
-  const formatUnderline = () => formatText('++');
-  const formatList = () => {
-    if (!canCurrentlyEdit) return;
-    
-    const textarea = document.querySelector('.w-md-editor-text-input') as HTMLTextAreaElement;
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const lineStart = notes.lastIndexOf('\n', start - 1) + 1;
-    const line = notes.substring(lineStart, start);
-    
-    let newText;
-    if (line.trim().startsWith('- ')) {
-      // Remove list formatting
-      newText = notes.substring(0, lineStart) + line.replace(/^[\s-]*/, '') + notes.substring(start);
-    } else {
-      // Add list formatting
-      newText = notes.substring(0, lineStart) + '- ' + line + notes.substring(start);
-    }
-    setNotes(newText);
-  };
 
   const handleLockToggle = async () => {
     if (!hasDirectPermissions || !selectedItemId) return;
@@ -325,43 +258,6 @@ const App: React.FC = () => {
           </div>
       </div>
 
-      {isEditing && canCurrentlyEdit && (
-        <div className="flex gap-1 mb-3 p-2 bg-slate-200 rounded-md">
-          <button
-            onClick={formatBold}
-            className="p-1.5 rounded hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="Bold (Ctrl+B)"
-            aria-label="Bold"
-          >
-            <BoldIcon />
-          </button>
-          <button
-            onClick={formatItalic}
-            className="p-1.5 rounded hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="Italic (Ctrl+I)"
-            aria-label="Italic"
-          >
-            <ItalicIcon />
-          </button>
-          <button
-            onClick={formatUnderline}
-            className="p-1.5 rounded hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="Underline"
-            aria-label="Underline"
-          >
-            <UnderlineIcon />
-          </button>
-          <button
-            onClick={formatList}
-            className="p-1.5 rounded hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="List"
-            aria-label="List"
-          >
-            <ListIcon />
-          </button>
-        </div>
-      )}
-
       <div className="flex-grow bg-white border border-slate-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 disabled:bg-slate-200 disabled:cursor-not-allowed" data-color-mode="light">
         {!isEditing ? (
           <div className="p-3 h-full overflow-auto text-slate-900">
@@ -373,7 +269,7 @@ const App: React.FC = () => {
           <MDEditor
             value={notes}
             onChange={(value) => setNotes(value || '')}
-            hideToolbar={!canCurrentlyEdit || status === 'saving'}
+            hideToolbar={!canCurrentlyEdit && status === 'saving'}
             height={450}
             preview="edit"
             textareaProps={{
