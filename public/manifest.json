@@ -7,18 +7,18 @@
     "icon": "./icon.png",
     "popover": "./index.html",
     "width": 300,
-    "height": 400,
-    "modes": [
-      {
-        "role": "CONTEXT",
-        "modes": [
-          {
-            "id": "IMAGE",
-            "min": 1,
-            "max": 1
-          }
-        ]
-      }
-    ]
-  }
+    "height": 400
+  },
+  "modes": [
+    {
+      "role": "CONTEXT",
+      "modes": [
+        {
+          "id": "IMAGE",
+          "min": 1,
+          "max": 1
+        }
+      ]
+    }
+  ]
 }
