@@ -3,10 +3,10 @@
   "name": "Token Notes",
   "version": "1.0.0",
   "background": {
-    "scripts": ["./background.js"]
+    "scripts": ["/background.js"]
   },
   "permissions": [
-    "CONTEXT_MENU",
-    "POPOVER"
+    { "id": "CONTEXT_MENU" },
+    { "id": "POPOVER" }
   ]
 }
