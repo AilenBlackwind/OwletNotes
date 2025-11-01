@@ -2,13 +2,13 @@
   "manifest_version": 1,
   "name": "OwletNotes",
   "version": "1.0.0",
-  "description": "An extension that allows users to add rich text notes to tokens with markdown support, collaborative editing, and permission controls.",
+  "description": "Add rich text notes to tokens with markdown support.",
   "author": "AilenBlackwind",
   "action": {
     "title": "Token Notes",
     "icon": "/icon.png",
     "popover": "/index.html",
-    "width": 650,
-    "height": 750
+    "width": 600,
+    "height": 700
   }
 }

@@ -1,0 +1,3179 @@
+﻿Action
+OBR.action
+An extensions action is shown in the top left of a room.
+When an action is clicked a popover will be shown for that action.
+The action is defined in the extensions Manifest file.
+Reference
+Methods
+getWidth
+async getWidth()
+Get the action popovers width.
+Returns a number or undefined.
+________________
+
+
+setWidth
+async setWidth(width)
+Set the action popovers width.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	width
+	number
+	The new width of the popover
+	________________
+
+
+getHeight
+async getHeight()
+Get the action popovers height.
+Returns a number or undefined.
+________________
+
+
+setHeight
+async setHeight(height)
+Set the action popovers height.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	height
+	number
+	The new height of the popover
+	________________
+
+
+getBadgeText
+async getBadgeText()
+Get the actions badge text.
+Returns a string or undefined.
+________________
+
+
+setBadgeText
+async setBadgeText(badgeText)
+Set the actions badge text.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	badgeText
+	string
+	The new badge text of the action. Set as undefined to remove the badge
+	________________
+
+
+getBadgeBackgroundColor
+async getBadgeBackgroundColor()
+Get the actions badge background color.
+Returns a string or undefined.
+________________
+
+
+setBadgeBackgroundColor
+async setBadgeBackgroundColor(badgeBackgroundColor)
+Set the actions badge background color.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	badgeBackgroundColor
+	string
+	The new badge background color of the action
+	________________
+
+
+getIcon
+async getIcon()
+Get the actions icon.
+Returns a string.
+________________
+
+
+setIcon
+async setIcon(icon)
+Set the actions icon.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	icon
+	string
+	The new icon of the action
+	________________
+
+
+getTitle
+async getTitle()
+Get the actions title.
+Returns a string.
+________________
+
+
+setTitle
+async setTitle(title)
+Set the actions title.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	title
+	string
+	The new title of the action
+	________________
+
+
+open
+async open()
+Open the action.
+________________
+
+
+close
+async close()
+Close the action.
+________________
+
+
+isOpen
+async isOpen()
+Returns true if the action is open
+________________
+
+
+onOpenChange
+onOpenChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(isOpen: boolean) => void
+	A callback for when the action is opened or closed
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onOpenChange` event with a React `useEffect`.
+* `onOpenChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.action.onOpenChange((isOpen) => {
+     // React to the action opening or closing
+   }),
+ []
+);
+Assets
+OBR.assets
+The assets API allows you to interact with the current users storage.
+Reference
+Methods
+uploadImages
+async uploadImages(images, typeHint)
+Open a folder picker to allow a user to upload the given images.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	images
+	ImageUpload[]
+	The images to upload
+	typeHint
+	ImageAssetType
+	An optional hint for which image type to use when uploading
+	Example
+Upload images from a HTMLInputElement element using the ImageUploadBuilder
+import OBR, { buildImageUpload } from "@owlbear-rodeo/sdk";
+
+
+<input
+ type="file"
+ onChange={async (e) => {
+   const files = e.target.files;
+   if (files) {
+     const uploads = [];
+     for (const file of files) {
+       // Note: we need to create a new file from the contents of the input file.
+       // This needs to be done due to browser security policies for sharing files
+       const data = await file.arrayBuffer();
+       const newFile = new File([data], file.name, { type: file.type });
+       uploads.push(buildImageUpload(newFile).build());
+     }
+     await OBR.assets.uploadImages(uploads);
+   }
+ }}
+/>;
+________________
+
+
+uploadScenes
+async uploadScenes(scenes, disableShowScenes)
+Open a folder picker to allow a user to upload the given scenes.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	scenes
+	SceneUpload[]
+	The scenes to upload
+	disableShowScenes
+	boolean
+	An optional flag to disable showing the Atlas after uploading the new scenes
+	Examples
+Upload a new empty scene with a hexagon grid using the SceneUploadBuilder
+import OBR, { buildSceneUpload } from "@owlbear-rodeo/sdk";
+
+
+const scene = buildSceneUpload()
+ .gridType("HEX_HORIZONTAL")
+ .name("Hex Scene")
+ .build();
+OBR.assets.uploadScenes([scene]);
+Upload a new scene with a map from a HTMLInputElement
+import OBR, { buildSceneUpload, buildImageUpload } from "@owlbear-rodeo/sdk";
+
+
+<input
+ type="file"
+ onChange={async (e) => {
+   const files = e.target.files;
+   if (files) {
+     const file = files[0];
+     // Note: we need to create a new file from the contents of the input file.
+     // This needs to be done due to browser security policies for sharing files
+     const data = await file.arrayBuffer();
+     const newFile = new File([data], file.name, { type: file.type });
+     const image = buildImageUpload(newFile).build();
+     const scene = buildSceneUpload()
+       .baseMap(image)
+       .name("Image Scene")
+       .build();
+     await OBR.assets.uploadScenes([scene]);
+   }
+ }}
+/>;
+________________
+
+
+downloadImages
+async downloadImages(multiple, defaultSearch, typeHint)
+Open an image picker to allow a user to share images with the extension.
+Returns an array of ImageDownloads
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	multiple
+	boolean
+	An optional boolean, if true the user can pick multiple images
+	defaultSearch
+	string
+	An optional default value for the search input in the image picker
+	typeHint
+	ImageAssetType
+	An optional hint for which image type to select
+	________________
+
+
+downloadScenes
+async downloadScenes(multiple, defaultSearch)
+Open a scene picker to allow a user to share scenes with the extension.
+Returns an array of SceneDownloads
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	multiple
+	boolean
+	An optional boolean, if true the user can pick multiple scenes
+	defaultSearch
+	string
+	An optional default value for the search input in the scene picker
+	________________
+
+
+Type Definitions
+ImageUpload
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	file
+	File | Blob
+	The image file to upload
+	name
+	string
+	The name of the new image, if left blank and a File input is used the file.name property will be used
+	grid
+	ImageGrid
+	The default grid settings for this image
+	rotation
+	number
+	The default rotation for this image in degrees
+	scale
+	Vector2
+	The default scale for this image
+	text
+	TextContent
+	The text displayed over the image
+	textItemType
+	"LABEL" | "TEXT"
+	The type of text to use for this image. The "LABEL" option will display the text as a label on the bottom of the image. The "TEXT" option will display the text over the top of the image.
+	visible
+	boolean
+	The default visible settings for this image
+	locked
+	boolean
+	The default locked settings for this image
+	description
+	string
+	An optional description of the item used by assistive technology
+	________________
+
+
+SceneUpload
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	name
+	string
+	The name of the scene
+	grid
+	Grid
+	The grid for the scene
+	fog
+	Fog
+	The fog settings for the scene
+	items
+	Item[]
+	The default items for the scene
+	baseMap
+	ImageUpload
+	An optional map image that will be used as the base for this scene
+	thumbnail
+	File | Blob
+	An optional image file to use as the initial thumbnail for the scene
+	________________
+
+
+ImageDownload
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	name
+	string
+	The name of the image
+	image
+	ImageContent
+	The image contents
+	grid
+	ImageGrid
+	The grid settings for this image
+	rotation
+	number
+	The rotation for this image in degrees
+	scale
+	Vector2
+	The scale for this image
+	text
+	TextContent
+	The text displayed over the image
+	textItemType
+	"LABEL" | "TEXT"
+	The type of text to use for this image. The "LABEL" option will display the text as a label on the bottom of the image. The "TEXT" option will display the text over the top of the image.
+	visible
+	boolean
+	The visible settings for this image
+	locked
+	boolean
+	The locked settings for this image
+	description
+	string
+	An optional description of the item used by assistive technology
+	type
+	ImageAssetType
+	The type of this image
+	________________
+
+
+SceneDownload
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	name
+	string
+	The name of the scene
+	grid
+	Grid
+	The grid for the scene
+	fog
+	Fog
+	The fog settings for the scene
+	items
+	Item[]
+	The items for the scene
+	________________
+
+
+ImageAssetType
+TYPE
+	values
+	string
+	"MAP" | "PROP" | "MOUNT" | "CHARACTER" | "ATTACHMENT" | "NOTE"
+	Broadcast
+OBR.broadcast
+The broadcast api allows you to send ephemeral messages to other players in the room.
+Reference
+Methods
+sendMessage
+async sendMessage(channel, data)
+Send a message to other players on a given channel.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	channel
+	string
+	The channel to send to
+	data
+	any
+	Any value that can be JSON serialized. Limited to 16KB in size
+	options
+	BroadcastOptions
+	Options to control how the message is sent (optional)
+	Example
+OBR.broadcast.sendMessage("rodeo.owlbear.example", "Hello, World!");
+________________
+
+
+onMessage
+onMessage(channel, callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	channel
+	string
+	The channel to receive from
+	callback
+	(event: BroadcastEvent) => void
+	A callback for when a message is sent from another player on this channel
+	Returns a function that when called will unsubscribe from message events for this channel.
+Example
+/**
+* Use an `onMessage` event with a React `useEffect`.
+* `onMessage` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.broadcast.onMessage("rodeo.owlbear.example", (event) => {
+     // Use the data from the event
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+BroadcastEvent
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	data
+	any
+	The data for this event
+	connectionId
+	string
+	The connection id of the player who sent the event
+	________________
+
+
+BroadcastOptions
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	destination
+	"REMOTE" | "LOCAL" | "ALL"
+	Choose where the broadcast is sent. "REMOTE" sends to other connected players, "LOCAL" will send to the current player and "ALL" will send to all connected players. Defaults to "REMOTE"
+	Context Menu
+OBR.contextMenu
+A context menu is shown when an item is selected, this API allows you to extend that menu with custom buttons.
+Reference
+Methods
+create
+async create(contextMenu)
+Create a context menu item.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	contextMenu
+	ContextMenuItem
+	The context menu item to create
+	________________
+
+
+remove
+async remove(id)
+Remove a context menu item.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the context menu to remove
+	________________
+
+
+Type Definitions
+ContextMenuItem
+A single context menu item.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this context menu item
+	icons
+	ContextMenuIcon[]
+	An array of icons to use
+	onClick
+	ContextMenuClickHandler
+	A callback function triggered when the context menu item is clicked
+	shortcut
+	string
+	An optional key combination to use as a shortcut
+	embed
+	ContextMenuEmbed
+	An optional embedded url to provide custom controls in the context menu
+	________________
+
+
+ContextMenuIcon
+An icon for a context menu item.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	icon
+	string
+	The url of the icon as either a relative or absolute path
+	label
+	string
+	The label to use for the tooltip of the icon
+	filter
+	ContextMenuIconFilter
+	An optional filter to control when this icon will be shown
+	________________
+
+
+ContextMenuIconFilter
+A filter to control when an icon will be shown. If this filter returns true then this icon will be shown. If no filter returns true then the context menu item won't be shown.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	min
+	number
+	An optional minimum number of items selected, defaults to 1
+	max
+	number
+	An optional maximum number of items selected
+	permissions
+	("UPDATE" | "DELETE" | "CREATE" | Permission)[]
+	An optional array of permissions needed for the selected items, defaults to no permissions needed
+	roles
+	("GM" | "PLAYER")[]
+	An optional array of roles needed for the player, defaults to no role needed
+	every
+	KeyFilter[]
+	An optional array of filters to run on the selected items. Every item must pass this filter for a success
+	some
+	KeyFilter[]
+	An optional array of filters to run on the selected items. Only one item must pass this filter for a success
+	________________
+
+
+ContextMenuClickHandler
+A callback when a context menu item is clicked.
+TYPE
+	function
+	Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	context
+	ContextMenuContext
+	The context for this menu
+	elementId
+	string
+	The ID of the button clicked
+	________________
+
+
+ContextMenuContext
+The context for a menu item.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	items
+	Item[]
+	An array of Items that are currently selected
+	selectionBounds
+	BoundingBox
+	A bounding box for the current selection
+	________________
+
+
+ContextMenuEmbed
+An embedded view in the context menu popup.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	url
+	string
+	The url of the site to embed
+	height
+	number
+	An optional height of the embed in pixels
+	Interaction
+OBR.interaction
+Manage interactions with Owlbear Rodeo.
+An interaction allows you to provide high frequency updates to Owlbear Rodeo without needing to worry about networking.
+Interactions in Owlbear Rodeo use an interpolated snapshot system where high frequency updates are applied in real-time locally but sampled at a lower frequency to be sent over the network to other players.
+On the receiving end low frequency snapshots are buffered and interpolated to ensure smooth playback.
+Not all item values are available when using an interaction. See here for available values.
+Reference
+Methods
+startItemInteraction
+async startItemInteraction(items)
+Start an interaction with an item or a list of items in a scene.
+These items can be newly created or be references to already existing items in the scene.
+Interaction Time Limit
+To prevent accidental network usage interactions expire after 30 seconds.
+When this happens the interaction will stop sending network traffic but new updates will still be applied locally.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	baseState
+	Item | Item[]
+	The item or items to interact with
+	Returns an InteractionManager that can be used to update and stop this interaction.
+Example
+/**
+* Create a pointer tool mode that starts an interaction on drag start,
+* updates that interaction on drag move and stops the interaction
+* on drag end/cancel.
+*/
+let interaction = null;
+OBR.tool.createMode({
+ id: "com.example.pointer",
+ icons: [
+   {
+     icon: "/icon.svg",
+     label: "Custom Pointer",
+     filter: {
+       activeTools: ["rodeo.owlbear.tools/pointer"],
+     },
+   },
+ ],
+ async onToolDragStart(_, event) {
+   const pointer = buildPointer().position(event.pointerPosition).build();
+   interaction = await OBR.interaction.startItemInteraction(pointer);
+ },
+ onToolDragMove(_, event) {
+   if (interaction) {
+     const [update] = interaction;
+     update((pointer) => {
+       pointer.position = event.pointerPosition;
+     });
+   }
+ },
+ onToolDragEnd() {
+   if (interaction) {
+     const [_, stop] = interaction;
+     stop();
+   }
+   interaction = null;
+ },
+ onToolDragCancel() {
+   if (interaction) {
+     const [_, stop] = interaction;
+     stop();
+   }
+   interaction = null;
+ },
+});
+________________
+
+
+Type Definitions
+InteractionManager
+TYPE
+	array
+	Properties
+INDEX
+	NAME
+	TYPE
+	DESCRIPTION
+	0
+	update
+	DispatchInteractionUpdate
+	A function to dispatch updates to this interaction
+	1
+	stop
+	function
+	A function to stop the interaction
+	________________
+
+
+DispatchInteractionUpdate
+Interaction's use Immer to provide updates. This function represents an Immer producer that provides a recipe for making immutable updates.
+TYPE
+	function
+	
+
+NAME
+	TYPE
+	DESCRIPTION
+	update
+	UpdateInteraction
+	A callback to apply an update to the previous state of this interaction
+	________________
+
+
+UpdateInteraction
+An Immer recipe for updating the current state of an interaction.
+TYPE
+	function
+	
+
+NAME
+	TYPE
+	DESCRIPTION
+	draft
+	Draft
+	An immer draft of the current state
+	________________
+
+
+Interactive Values
+When you update a value using an interaction a faster rendering path will be used. This fast path works by skipping the processing of any hierarchy data and updating values directly on the renderer. Because of this method not all parameters are available when changing values in an interaction.
+Below is a list of items and the values that can be updated in an interaction:
+Item
+NAME
+	TYPE
+	DESCRIPTION
+	position
+	Vector2
+	The position of this item
+	rotation
+	number
+	The rotation of this item in degrees
+	scale
+	Vector2
+	The scale of this item
+	Curve
+NAME
+	TYPE
+	DESCRIPTION
+	points
+	Vector2[]
+	The list of points to draw
+	Image
+NAME
+	TYPE
+	DESCRIPTION
+	image
+	ImageContent
+	Only the width and height of the image content
+	grid
+	ImageGrid
+	The grid scale of the image
+	Label
+NAME
+	TYPE
+	DESCRIPTION
+	text
+	TextContent
+	Only the plainText can be updated
+	Line
+NAME
+	TYPE
+	DESCRIPTION
+	startPosition
+	Vector2
+	The start position of the line
+	endPosition
+	Vector2
+	The end position of the line
+	Path
+NAME
+	TYPE
+	DESCRIPTION
+	commands
+	PathCommand[]
+	The list of drawing commands
+	Ruler
+NAME
+	TYPE
+	DESCRIPTION
+	startPosition
+	Vector2
+	The start position of the ruler
+	endPosition
+	Vector2
+	The end position of the ruler
+	measurement
+	string
+	The value to display on the ruler
+	Shape
+NAME
+	TYPE
+	DESCRIPTION
+	width
+	number
+	The width of the shape
+	height
+	number
+	The height of the shape
+	--
+Modal
+OBR.modal
+The modal API allows you to display custom UI over the top of the Owlbear Rodeo interface as a modal.
+Reference
+Methods
+open
+async open(modal)
+Open a new modal.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	modal
+	Modal
+	The modal to open
+	Example
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ onClick() {
+   OBR.modal.open({
+     id: "rodeo.owlbear.example/modal",
+     url: "/modal",
+     height: 300,
+     width: 400,
+   });
+ },
+});
+________________
+
+
+close
+async close(id)
+Close an open modal.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the modal to close
+	________________
+
+
+Type Definitions
+Modal
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this modal
+	url
+	string
+	The url of the site to embed
+	width
+	number
+	An optional width of the modal in pixels
+	height
+	number
+	An optional height of the modal in pixels
+	fullScreen
+	boolean
+	An optional boolean, if true the modal will take up the whole screen
+	hideBackdrop
+	boolean
+	An optional boolean, if true the dark backdrop will be hidden
+	hidePaper
+	boolean
+	An optional boolean, if true the colored background will be removed
+	disablePointerEvents
+	boolean
+	An optional boolean, if true the modal will not react to mouse or touch events
+	Notification
+OBR.notification
+Show notifications in the Owlbear Rodeo interface.
+Reference
+Methods
+show
+async show(message, variant?)
+Show a notification.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	message
+	string
+	The message to show in the notification
+	variant
+	"DEFAULT" | "ERROR" | "INFO" | "SUCCESS" | "WARNING"
+	An optional style variant for the notification
+	Returns the notification ID as a string.
+________________
+
+
+close
+async close(id)
+Close a notification.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the notification to close
+	Party
+OBR.party
+The party api gives you access to other players currently in the room.
+Reference
+Methods
+getPlayers
+async getPlayers()
+Get the other players currently in the room.
+Returns an array of Players.
+________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(players: Player[]) => void
+	A callback for when any connected player joins, leaves or changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.party.onChange((party) => {
+     // React to party changes
+   }),
+ []
+);
+
+
+Player
+OBR.player
+The player API gives you access to the current player using Owlbear Rodeo.
+Reference
+Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The user ID for this player. This will be shared if the same player joins a room multiple times
+	________________
+
+
+Methods
+getSelection
+async getSelection()
+Get the current selection for this player.
+Returns an array of Item IDs or undefined if the player has no current selection.
+________________
+
+
+select
+async select(items, replace?)
+Select items for the player.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	items
+	string[]
+	An array of item IDs to select
+	replace
+	boolean
+	An optional boolean, if true the users selection will be replaced, if false the selection will be combined with their current selection
+	________________
+
+
+deselect
+async deselect(items)
+Deselect a set of items or all items.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	items
+	string[]
+	An optional array if item IDs to deselect, if undefined all items will be deselected
+	________________
+
+
+getName
+async getName()
+Get the name for this player.
+Returns a string.
+________________
+
+
+setName
+async setName(name)
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	name
+	string
+	The new name for this player
+	________________
+
+
+getColor
+async getColor()
+Get the color for this player.
+Returns a string.
+________________
+
+
+setColor
+async setColor(color)
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	color
+	string
+	The new color for this player
+	________________
+
+
+getSyncView
+async getSyncView()
+Get whether this player currently has sync view enabled
+Returns a boolean.
+________________
+
+
+setSyncView
+async setSyncView(syncView)
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	syncView
+	boolean
+	The new sync view state for this player
+	________________
+
+
+getId
+async getId()
+Get the user ID for this player. In most cases the id property should be used instead as it is synchronous.
+This will be shared if the same player joins a room multiple times.
+Returns a string.
+________________
+
+
+getRole
+async getRole()
+Get the current role for this player.
+returns "GM" | "PLAYER".
+________________
+
+
+getMetadata
+async getMetadata()
+Get the current metadata for this player.
+returns a Metadata object.
+________________
+
+
+setMetadata
+async setMetadata(update)
+Update the metadata for this player.
+See Metadata for best practices when updating metadata.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	update
+	Partial<Metadata>
+	A partial update to this players metadata. The included values will be spread among the current metadata to avoid overriding other values.
+	________________
+
+
+hasPermission
+async hasPermission(permission)
+Does this player have the given permission.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	permission
+	Permission
+	The permission to check
+	Returns a boolean.
+________________
+
+
+getConnectionId
+async getConnectionId()
+Get the current connection ID for this player.
+This will be unique if the same player joins the room multiple times.
+Returns a string.
+________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(player: Player) => void
+	A callback for when a value on the current player changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.player.onChange((player) => {
+     // React to player changes
+   }),
+ []
+);
+Popover
+OBR.popover
+The popover API allows you to display custom UI over the top of the Owlbear Rodeo interface.
+Reference
+Methods
+open
+async open(popover)
+Open a new popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	popover
+	Popover
+	The popover to open
+	Example
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ onClick(_, elementId) {
+   OBR.popover.open({
+     id: "rodeo.owlbear.example/popover",
+     url: "/popover",
+     height: 80,
+     width: 200,
+     anchorElementId: elementId,
+   });
+ },
+});
+________________
+
+
+close
+async close(id)
+Close an open popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the popover to close
+	________________
+
+
+getWidth
+async getWidth(id)
+Get the width of a popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the popover
+	________________
+
+
+getHeight
+async getHeight(id)
+Get the height of a popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the popover
+	________________
+
+
+setWidth
+async setWidth(id)
+Set the width of a popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the popover
+	width
+	number
+	The width of the popover
+	________________
+
+
+setHeight
+async setHeight(id)
+Set the height of a popover.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the popover
+	height
+	number
+	The height of the popover
+	________________
+
+
+Type Definitions
+Popover
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this popover
+	url
+	string
+	The url of the site to embed
+	width
+	number
+	The width of the popover in pixels
+	height
+	number
+	The height of the popover in pixels
+	anchorElementId
+	string
+	An optional ID of the element to anchor the popover to
+	anchorPosition
+	{ left: number; top: number }
+	An optional position to anchor the popover to
+	anchorOrigin
+	{ horizontal: "CENTER" | "LEFT" | "RIGHT"; vertical: "BOTTOM" | "CENTER" | "TOP" }
+	An optional origin for the popover anchor
+	transformOrigin
+	{ horizontal: "CENTER" | "LEFT" | "RIGHT"; vertical: "BOTTOM" | "CENTER" | "TOP" }
+	An optional origin for the popover transform
+	anchorReference
+	"ELEMENT" | "POSITION"
+	Optionally use either the elementId as the anchor or the position
+	hidePaper
+	boolean
+	An optional boolean, if true the colored background will be removed
+	disableClickAway
+	boolean
+	An optional boolean, if true the popover will remain open when the user clicks away from it
+	marginThreshold
+	boolean
+	An optional number, how close the popover is allowed to get to the document borders
+	Room
+OBR.room
+The room API gives you access to the current room the extension is being used in.
+Reference
+Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	A unique ID for the current room.
+	________________
+
+
+Methods
+getPermissions
+async getPermissions()
+Get the current permissions for players in this room.
+Returns a Permission array.
+________________
+
+
+onPermissionsChange
+onPermissionsChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(permissions: Permission[]) => void
+	A callback for when the permissions of the current room changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onPermissionsChange` event with a React `useEffect`.
+* `onPermissionsChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.room.onPermissionsChange((permissions) => {
+     // React to rooms permissions change
+   }),
+ []
+);
+________________
+
+
+getMetadata
+async getMetadata()
+Get the current metadata for this room.
+returns a Metadata object.
+________________
+
+
+setMetadata
+async setMetadata(update)
+Update the metadata for this room.
+See Metadata for best practices when updating metadata.
+Room metadata is intended for small bits of stored data for an extension.
+In total the room metadata must be under 16kB.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	update
+	Partial<Metadata>
+	A partial update to this rooms metadata. The included values will be spread among the current metadata to avoid overriding other values.
+	________________
+
+
+onMetadataChange
+onMetadataChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(metadata: Metadata) => void
+	A callback for when the metadata of the current room changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onMetadataChange` event with a React `useEffect`.
+* `onMetadataChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.room.onMetadataChange((metadata) => {
+     // React to rooms metadata changes
+   }),
+ []
+);
+
+
+Scene
+OBR.scene
+A scene is an infinite space for you to lay out images, drawings, fog and more.
+Reference
+Methods
+isReady
+async isReady()
+Returns true if there is a scene opened and it is ready to interact with.
+________________
+
+
+onReadyChange
+onReadyChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(ready: boolean) => void
+	A callback for when the current scene changes its ready state
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onReadyChange` event with a React `useEffect`.
+* `onReadyChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.onReadyChange((ready) => {
+     if (ready) {
+       // interact with the scene
+     }
+   }),
+ []
+);
+________________
+
+
+getMetadata
+async getMetadata()
+Get the current metadata for this scene.
+returns a Metadata object.
+________________
+
+
+setMetadata
+async setMetadata(update)
+Update the metadata for this scene.
+See Metadata for best practices when updating metadata.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	update
+	Partial<Metadata>
+	A partial update to this scenes metadata. The included values will be spread among the current metadata to avoid overriding other values.
+	________________
+
+
+onMetadataChange
+onMetadataChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(metadata: Metadata) => void
+	A callback for when the metadata changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onMetadataChange` event with a React `useEffect`.
+* `onMetadataChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.onMetadataChange((metadata) => {
+     // React to metadata changes
+   }),
+ []
+);
+Fog
+OBR.scene.fog
+Interact with the base fog settings for this scene.
+Reference
+Methods
+getColor
+async getColor()
+Get the color of the scenes fog.
+Returns a string.
+________________
+
+
+setColor
+async setColor(color)
+Set the color of the scenes fog.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	color
+	string
+	The new color of the fog
+	________________
+
+
+getStrokeWidth
+async getStrokeWidth()
+Get the stroke width of the scenes fog.
+Returns a number.
+________________
+
+
+setStrokeWidth
+async setStrokeWidth(width)
+Set the stroke width of the scenes fog.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	width
+	number
+	The new width fog stroke
+	________________
+
+
+getFilled
+async getFilled()
+Returns true if the scene if filled with fog.
+________________
+
+
+setFilled
+async setFilled(filled)
+Set the filled state of the scenes fog.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	filled
+	boolean
+	The new filled state of the fog
+	________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(fog: Fog) => void
+	A callback for when the fog changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.fog.onChange((fog) => {
+     // React to fog changes
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+Fog
+The fog state for a scene.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	filled
+	boolean
+	Is the fog filling the scene
+	style
+	FogStyle
+	The style of the fog
+	________________
+
+
+FogStyle
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	color
+	string
+	The color of the fog
+	strokeWidth
+	number
+	An optional width of the fog stroke
+	Grid
+OBR.scene.grid
+Interact with the scene's grid.
+Reference
+Methods
+getDpi
+async getDpi()
+Get the dots per inch (DPI) of the grid. Determines the resolution of one grid cell. For square grids this represents both the width and height of the grid cell. For vertically oriented hex grids this is the width of the grid cell. For horizontally oriented hex grids this is the height of the grid cell. For isometric and dimetric grids this is the post-transform height of the grid cell.
+returns a number.
+________________
+
+
+getScale
+async getScale()
+Get the current scale of the grid.
+Returns a GridScale.
+________________
+
+
+setScale
+async setScale(scale)
+Set the scale of the grid as a raw string.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	scale
+	string
+	The new raw scale of the grid
+	Example
+OBR.scene.grid.setScale("5ft");
+________________
+
+
+getColor
+async getColor()
+Get the current color of the grid.
+Returns a GridColor.
+________________
+
+
+setColor
+async setColor(color)
+Set the color of the grid.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	color
+	GridColor
+	The new color of the grid
+	Example
+OBR.scene.grid.setColor("DARK");
+________________
+
+
+getOpacity
+async getOpacity()
+Get the current opacity of the grid between 0 and 1.
+Returns a number.
+________________
+
+
+setOpacity
+async setOpacity(opacity)
+Set the opacity of the grid.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	opacity
+	number
+	The new opacity of the grid between 0 and 1
+	________________
+
+
+getType
+async getType()
+Get the current grid type.
+Returns a GridType.
+________________
+
+
+setType
+async setType(type)
+Set the type of the grid.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	type
+	GridType
+	The new type of the grid
+	Example
+OBR.scene.grid.setType("HEX_VERTICAL");
+________________
+
+
+getLineType
+async getLineType()
+Get the current grid line type.
+Returns a GridLineType.
+________________
+
+
+setLineType
+async setLineType(lineType)
+Set the type of the grid line.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	lineType
+	GridLineType
+	The new type of the grid line
+	Example
+OBR.scene.grid.setLineType("DASHED");
+________________
+
+
+getMeasurement
+async getMeasurement()
+Get the current grid measurement type.
+Returns a GridMeasurement.
+________________
+
+
+setMeasurement
+async setMeasurement(measurement)
+Set the measurement type of the grid.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	measurement
+	GridMeasurement
+	The new measurement type of the grid
+	Example
+OBR.scene.grid.setMeasurement("EUCLIDEAN");
+________________
+
+
+getLineWidth
+async getLineWidth()
+Get the current line width of the grid in pixels.
+Returns a number.
+________________
+
+
+setLineWidth
+async setLineWidth(lineWidth)
+Set the width of the grid lines.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	lineWidth
+	number
+	The new line width of the grid, must be greater than zero
+	________________
+
+
+snapPosition
+async snapPosition(position, snappingSensitivity, useCorners)
+Snap a Vector2 position to the nearest grid cell using the current grid settings.
+Returns a Vector2 with the new position.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	position
+	Vector2
+	The position to snap
+	snappingSensitivity
+	number
+	An optional number between 0 and 1. Leave undefined to use the users snapping preference. A value of 0 will disable snapping. A value of 1 will completely snap to the grid.
+	useCorners
+	boolean
+	An optional boolean. If true the corners of the grid cell will be valid snap locations. Defaults to true.
+	useCenter
+	boolean
+	An optional boolean. If true the center of the grid cell will be a valid snap location. Defaults to true.
+	________________
+
+
+getDistance
+async getDistance(from, to)
+Get the distance between two Vector2s on the Scenes grid.
+Returns the shortest distance between the two inputs using the current GridMeasurement for the scene. When set to "EUCLIDEAN" this will be the exact distance. For all other measurement types this will be an integer of how many grid cells were traversed.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	from
+	Vector2
+	The start position in pixels
+	to
+	Vector2
+	The end position in pixels
+	________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(grid: Grid) => void
+	A callback for when the grid changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.grid.onChange((grid) => {
+     // React to grid changes
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+Grid
+The grid for a scene.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	dpi
+	number
+	Dots per inch of the scene. Determines the resolution of one grid cell. For square grids this represents both the width and height of the grid cell. For vertically oriented hex grids this is the width of the grid cell. For horizontally oriented hex grids this is the height of the grid cell.
+	style
+	GridStyle
+	The style of the grid
+	type
+	GridType
+	The type of the grid
+	measurement
+	GridMeasurement
+	The measurement type of the grid
+	scale
+	string
+	The raw scale of the grid. For example 5ft
+	________________
+
+
+GridStyle
+The style of a grid.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	lineType
+	GridLineType
+	The style of the grid line
+	lineOpacity
+	number
+	The opacity of the grid line between 0 and 1
+	lineColor
+	GridColor
+	The color of the grid line
+	lineWidth
+	number
+	The width of the grid line
+	________________
+
+
+GridLineType
+The type of a grid line.
+TYPE
+	values
+	string
+	"SOLID" | "DASHED" | "DOTTED"
+	________________
+
+
+GridColor
+The color of a grid line.
+TYPE
+	values
+	string
+	"DARK" | "LIGHT" | "HIGHLIGHT" | string
+	________________
+
+
+GridType
+The type of a grid.
+TYPE
+	values
+	string
+	"SQUARE" | "HEX_VERTICAL" | "HEX_HORIZONTAL" | "DIMETRIC" | "ISOMETRIC"
+	________________
+
+
+GridMeasurement
+The type of a grid measurement.
+TYPE
+	values
+	string
+	"CHEBYSHEV" | "ALTERNATING" | "EUCLIDEAN" | "MANHATTAN"
+	________________
+
+
+GridScale
+The scale of a grid.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	raw
+	string
+	The raw grid scale. For example 5ft
+	parsed
+	ParsedGridScale
+	The raw grid scale parsed into a more usable form
+	ParsedGridScale
+The raw grid scale parsed into a more usable form
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	multiplier
+	number
+	The number multiplier of the scale. For example 5 for a 5ft scale
+	unit
+	string
+	The unit of the scale. For example ft for a 5ft scale
+	digits
+	number
+	The precision of the scale. For example 2 for a 5.00ft scale
+
+
+	History
+OBR.scene.history
+Interact with the undo/redo stack of the scene.
+Reference
+Methods
+undo
+async undo()
+Undo the previous action.
+________________
+
+
+redo
+async redo()
+Redo the an action that was undone.
+________________
+
+
+canUndo
+async canUndo()
+Returns true if there is an action on the undo stack.
+________________
+
+
+canRedo
+async canRedo()
+Returns true if there is an action on the redo stack.
+Items
+OBR.scene.items
+An Item is the basic building block of everything shown in a Scene.
+For all available items see here.
+Reference
+Methods
+getItems
+async getItems(filter)
+Get then current items in the scene.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	filter
+	ItemFilter
+	An optional filter to run on the scenes items
+	Example
+Get items with the given ids.
+const uuid = "55c04fba-9fa3-483b-8cf8-287737cbea9b";
+const items = await OBR.scene.items.getItems([uuid]);
+Get all images.
+import { isImage } from "@owlbear-rodeo/sdk";
+
+
+const images = await OBR.scene.items.getItems(isImage);
+Get all images on the Character layer
+import { isImage } from "@owlbear-rodeo/sdk";
+
+
+const characters = await OBR.scene.items.getItems(
+ (item) => item.layer === "CHARACTER" && isImage(item)
+);
+Get all images on the Character layer using Typescript
+import { Image, isImage } from "@owlbear-rodeo/sdk";
+
+
+const characters = await OBR.scene.items.getItems(
+ (item): item is Image => item.layer === "CHARACTER" && isImage(item)
+);
+________________
+
+
+updateItems
+async updateItems(filterOrItems, update)
+Update existing items in the scene.
+To track changes and ensure immutability the update function uses an Immer WritableDraft.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	filterOrItems
+	ItemFilter | Item[]
+	Either a filter or a list of items to update
+	update
+	(draft: WritableDraft<Item[]>) => void
+	An update function that allows you to update an Immer WritableDraft of the input items
+	Example
+Lock all images
+import { isImage } from "@owlbear-rodeo/sdk";
+
+
+await OBR.scene.items.updateItems(isImage, (images) => {
+ for (let image of images) {
+   image.locked = true;
+ }
+});
+Turn all shapes pink
+import { isShape } from "@owlbear-rodeo/sdk";
+
+
+await OBR.scene.items.updateItems(isShape, (shapes) => {
+ for (let shape of shapes) {
+   shape.style.fillColor = "pink";
+ }
+});
+Hide all attachments
+OBR.scene.items.updateItems(
+ (item) => item.layer === "ATTACHMENT",
+ (items) => {
+   for (let item of items) {
+     item.visible = false;
+   }
+ }
+);
+Hide selected items when clicking a context menu item
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ onClick(context) {
+   OBR.scene.items.updateItems(context.items, (items) => {
+     for (let item of items) {
+       item.visible = false;
+     }
+   });
+ },
+});
+________________
+
+
+addItems
+async addItems(items)
+Add new items to the scene.
+To create new items you can use the item Builders.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	items
+	Item[]
+	A list of items to add
+	Example
+Add a circle shape to the scene
+import OBR, { buildShape } from "@owlbear-rodeo/sdk";
+
+
+const item = buildShape().width(10).height(10).shapeType("CIRCLE").build();
+OBR.scene.items.addItems([item]);
+________________
+
+
+deleteItems
+async deleteItems(ids)
+Delete existing items by their IDs.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to delete by their IDs
+	Example
+Delete selected items when clicking a context menu item
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ onClick(context) {
+   const ids = context.items.map((item) => item.id);
+   OBR.scene.items.deleteItems(ids);
+ },
+});
+________________
+
+
+getItemAttachments
+async getItemAttachments(ids)
+Get all items, attachments and sub-attachments for a set of item IDs.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to look up by their IDs
+	Returns a list of Items.
+Example
+Delete selected items and their attachments when clicking a context menu item
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ async onClick(context) {
+   const ids = context.items.map((item) => item.id);
+   const allItems = await OBR.scene.items.getItemAttachments(ids);
+   const allIds = allItems.map((item) => item.id);
+   OBR.scene.items.deleteItems(allIds);
+ },
+});
+________________
+
+
+getItemBounds
+async getItemBounds(ids)
+Get the axis-aligned bounding box for the given items.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to look up by their IDs
+	Returns a BoundingBox.
+________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(items: Item[]) => void
+	A callback for when an item changes. The items array will include all items in the scene, not just those that changed.
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.items.onChange((items) => {
+     // React to item changes
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+ItemFilter
+A filter to run on a list of items.
+TYPE
+	function
+	Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	item
+	Item
+	The item to run the filter on
+	Returns a boolean. If true the item passes the filter and will be used. If false the item will be ignored.
+
+
+Local
+OBR.scene.local
+An Item is the basic building block of everything shown in a Scene.
+For all available items see here.
+This API is a mirror to the Items API but only interacts with local items.
+A local item is a temporary item that will only be seen by the current user.
+They are most useful for displaying feedback to the user such as showing a label when using a custom tool.
+Reference
+Methods
+getItems
+async getItems(filter)
+Get then current local items in the scene.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	filter
+	ItemFilter
+	An optional filter to run on the scenes local items
+	Example
+Get local items with the given ids.
+const uuid = "55c04fba-9fa3-483b-8cf8-287737cbea9b";
+const items = await OBR.scene.local.getItems([uuid]);
+________________
+
+
+updateItems
+async updateItems(filterOrItems, update, fastUpdate)
+Update existing local items in the scene.
+To track changes and ensure immutability the update function uses an Immer WritableDraft.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	filterOrItems
+	ItemFilter | Item[]
+	Either a filter or a list of local items to update
+	update
+	(draft: WritableDraft<Item[]>) => void
+	An update function that allows you to update an Immer WritableDraft of the input local items
+	fastUpdate
+	boolean
+	If true a faster update method will be used. Not all values can be updated using this method so check here to see if this will work.
+	Example
+Update the position of a known local item
+const uuid = "55c04fba-9fa3-483b-8cf8-287737cbea9b";
+
+
+await OBR.scene.local.updateItems([uuid], (items) => {
+ for (let item of items) {
+   item.position.x += 100;
+ }
+});
+________________
+
+
+addItems
+async addItems(items)
+Add new local items to the scene.
+To create new items you can use the item Builders.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	items
+	Item[]
+	A list of items to add
+	Example
+Add a label to the scene
+import OBR, { buildLabel } from "@owlbear-rodeo/sdk";
+
+
+const item = buildLabel().plainText("Test").build();
+OBR.scene.local.addItems([item]);
+________________
+
+
+deleteItems
+async deleteItems(ids)
+Delete existing items by their IDs.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to delete by their IDs
+	Example
+Delete a known local item
+const uuid = "55c04fba-9fa3-483b-8cf8-287737cbea9b";
+
+
+OBR.scene.local.deleteItems([uuid]);
+________________
+
+
+getItemAttachments
+async getItemAttachments(ids)
+Get all items, attachments and sub-attachments for a set of item IDs.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to look up by their IDs
+	Returns a list of Items.
+________________
+
+
+getItemBounds
+async getItemBounds(ids)
+Get the axis-aligned bounding box for the given items.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	ids
+	string[]
+	A list of items to look up by their IDs
+	Returns a BoundingBox.
+________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(items: Item[]) => void
+	A callback for when a local item changes. The items array will include all local items in the scene, not just those that changed.
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.scene.local.onChange((items) => {
+     // React to item changes
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+ItemFilter
+A filter to run on a list of items.
+TYPE
+	function
+	Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	item
+	Item
+	The item to run the filter on
+	Returns a boolean. If true the item passes the filter and will be used. If false the item will be ignored.
+Theme
+OBR.theme
+The theme API gives you access to the current theme used by Owlbear Rodeo.
+Reference
+Methods
+getTheme
+async getTheme()
+Get the current Owlbear Rodeo theme.
+Returns a Theme object.
+________________
+
+
+onChange
+onChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(theme: Theme) => void
+	A callback for when the current theme changes
+	Returns a function that when called will unsubscribe from change events.
+Example
+/**
+* Use an `onChange` event with a React `useEffect`.
+* `onChange` returns an unsubscribe event to make this easy.
+*/
+useEffect(
+ () =>
+   OBR.theme.onChange((theme) => {
+     // React to theme changes
+   }),
+ []
+);
+________________
+
+
+Type Definitions
+Theme
+The palette of a theme
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	mode
+	"DARK" | "LIGHT"
+	The color mode of the theme
+	primary
+	ThemeColor
+	The primary color of the theme
+	secondary
+	ThemeColor
+	The secondary color of the theme
+	background
+	ThemeBackground
+	The background color of the theme
+	text
+	ThemeText
+	The text color of the theme
+	________________
+
+
+ThemeColor
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	main
+	string
+	The main color
+	light
+	string
+	A lightened version of the main color
+	dark
+	string
+	A darkened version of the main color
+	contrastText
+	string
+	A text color that contrasts with the main color
+	________________
+
+
+ThemeBackground
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	default
+	string
+	The base background color
+	paper
+	string
+	A highlight background color used for raised background elements
+	________________
+
+
+ThemeText
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	primary
+	string
+	The primary text color
+	secondary
+	string
+	A secondary text color that recedes compared to the primary text
+	disabled
+	string
+	A disabled text color used for disabled elements
+	Tool
+OBR.tool
+Manage custom tools, tool modes and tool actions.
+Reference
+Methods
+create
+async create(tool)
+Create a new tool.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	tool
+	Tool
+	The new tool to create
+	________________
+
+
+remove
+async remove(id)
+Remove an existing tool.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the tool to remove
+	________________
+
+
+getActiveTool
+async getActiveTool()
+Returns a string of the current active tool ID.
+________________
+
+
+onToolChange
+onToolChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(id: string) => void
+	A callback for when the current tool changes
+	Returns a function that when called will unsubscribe from change events.
+________________
+
+
+createAction
+async createAction(action)
+Create a new tool action.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	action
+	ToolAction
+	The new tool action to create
+	________________
+
+
+removeAction
+async removeAction(id)
+Remove an existing tool action.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the tool action to remove
+	________________
+
+
+createMode
+async createMode(mode)
+Create a new tool mode.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	mode
+	ToolMode
+	The new tool mode to create
+	________________
+
+
+removeMode
+async removeMode(id)
+Remove an existing tool mode.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the tool mode to remove
+	________________
+
+
+activateMode
+async activateMode(toolId, modeId)
+Activate a specific mode for a given tool.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	toolId
+	string
+	The ID of the tool
+	modeId
+	string
+	The ID of the tool mode to activate
+	________________
+
+
+getActiveToolMode
+async getActiveToolMode()
+Returns a string of the current active tool mode ID.
+________________
+
+
+onToolModeChange
+onToolModeChange(callback);
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	callback
+	(id: string) => void
+	A callback for when the current tool mode changes
+	Returns a function that when called will unsubscribe from change events.
+________________
+
+
+getMetadata
+async getMetadata(id)
+Get the metadata for the given tool.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of the tool
+	Returns a Metadata object.
+________________
+
+
+setMetadata
+async setMetadata(toolId, update)
+Update the metadata for a given tool.
+Example
+Update the stroke color of a custom drawing tool
+async function handleChange(value: string) {
+ await OBR.tool.setMetadata("com.example.drawing", {
+   strokeColor: value,
+ });
+}
+This does not override any metadata properties that already exist. For example if the metadata looks like this:
+{
+ strokeWidth: 1,
+ strokeColor: "red"
+}
+And handleChange("blue") is called in the example above then the resulting metadata will look like this:
+{
+ strokeWidth: 1,
+ strokeColor: "blue"
+}
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	toolId
+	string
+	The ID of the tool
+	update
+	Partial<Metadata>
+	The metadata data update to use. The metadata is spread into the existing metadata.
+	________________
+
+
+Type Definitions
+Tool
+A tool in the toolbar.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this tool
+	icons
+	ToolIcon[]
+	The icons for this tool
+	disabled
+	ToolFilter
+	An optional filter for checking if the tool should be disabled
+	onClick
+	(context: ToolContext, elementId: string) => void | undefined | boolean
+	An optional callback for when the tool icon is clicked. By default the clicked tool will be activated. If defined return true to perform the default click action.
+	shortcut
+	string
+	An optional key shortcut for this tool
+	defaultMode
+	string
+	An optional ID of the mode to be activated by default
+	defaultMetadata
+	Metadata
+	An optional Metadata object to use as default
+	________________
+
+
+ToolAction
+A tool action defines an item in the tool menu bar.
+Unlike a tool mode an action is a clickable item but won't be activated when clicked.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this action
+	icons
+	ToolIcon[]
+	The icons for this action
+	disabled
+	ToolFilter
+	An optional filter for checking if the action should be disabled
+	onClick
+	(context: ToolContext, elementId: string) => void
+	An optional callback for when the action icon is clicked
+	shortcut
+	string
+	An optional key shortcut for this action
+	________________
+
+
+ToolMode
+A tool mode will be activated when clicked.
+Once a mode is active it will receive pointer events such as onToolMove and onToolDragMove.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	id
+	string
+	The ID of this mode
+	icons
+	ToolIcon[]
+	The icons for this mode
+	disabled
+	ToolFilter
+	An optional filter for checking if the mode should be disabled
+	onClick
+	(context: ToolContext, elementId: string) => void | undefined | boolean
+	An optional callback for when the mode icon is clicked. By default the clicked mode will be activated. If defined return true to perform the default click action.
+	shortcut
+	string
+	An optional key shortcut for this mode
+	cursors
+	ToolCursor[]
+	An optional array of cursors
+	onToolClick
+	(context: ToolContext, event: ToolEvent) => void | undefined | boolean
+	An optional callback for when a single click is made by the tool. By default the clicked item will be selected if it is unlocked. If defined return true to perform the default click action.
+	onToolDoubleClick
+	(context: ToolContext, event: ToolEvent) => void | undefined | boolean
+	An optional callback for when a double click is made by the tool. By default the clicked item will be selected event if it is locked. If defined return true to perform the default double click action.
+	onToolDown
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when the pointer enters the down state
+	onToolMove
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when the pointer moves
+	onToolUp
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when the pointer enters the up state
+	onToolDragStart
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when a drag starts on the viewport
+	onToolDragMove
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when dragging on the viewport
+	onToolDragEnd
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when a drag ends on the viewport
+	onToolDragCancel
+	(context: ToolContext, event: ToolEvent) => void
+	An optional callback for when a drag event is canceled by either switching modes or pressing the Escape key
+	onActivate
+	(context: ToolContext)
+	An optional callback for when the tool mode is activated
+	onDeactivate
+	(context: ToolContext )
+	An optional callback for when the tool mode is deactivated
+	onKeyDown
+	(context: ToolContext, event: KeyEvent) => void
+	An optional callback for when a key is pressed
+	onKeyUp
+	(context: ToolContext, event: KeyEvent) => void
+	An optional callback for when a key is released
+	preventDrag
+	ToolModeFilter
+	An optional filter for checking if the drag event should be prevented. If the filter returns true the default drag operation will be used which mimics the Move tool.
+	________________
+
+
+ToolContext
+Holds the state of the tool.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	activeTool
+	string
+	The ID of the current active tool
+	activeMode
+	string
+	An optional ID of the current active tool mode
+	metadata
+	Metadata
+	The metadata of the current active tool
+	________________
+
+
+ToolEvent
+A pointer event for a tool mode.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	pointerPosition
+	Vector2
+	The pointer position relative to the viewport
+	target
+	Item
+	An optional target for the pointer event
+	transformer
+	boolean
+	If we have a target are we selecting a transformer control point
+	altKey
+	boolean
+	Is the Alt key pressed down
+	shiftKey
+	boolean
+	Is the Shift key pressed down
+	ctrlKey
+	boolean
+	Is the Ctrl key pressed down
+	metaKey
+	boolean
+	Is the Meta key pressed down
+	________________
+
+
+KeyEvent
+A key event for a tool mode.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	code
+	string
+	A string representation of the physical key pressed
+	key
+	string
+	A string representation of the key
+	altKey
+	boolean
+	Is the Alt key pressed down
+	shiftKey
+	boolean
+	Is the Shift key pressed down
+	ctrlKey
+	boolean
+	Is the Ctrl key pressed down
+	metaKey
+	boolean
+	Is the Meta key pressed down
+	repeat
+	boolean
+	Is the key being held down such that it is automatically repeating
+	________________
+
+
+ToolIcon
+An icon for a tool.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	icon
+	string
+	The url of the icon as either a relative or absolute path
+	label
+	string
+	The label to use for the tooltip of the icon
+	filter
+	ToolFilter
+	An optional filter to control when this icon will be shown
+	________________
+
+
+ToolFilter
+A filter to control if various tools, actions or modes will be shown.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	activeTools
+	string[]
+	An optional array of tool IDs that can be active
+	activeModes
+	string[]
+	An optional array of tool mode IDs that can be active
+	permissions
+	Permission[]
+	An optional permissions filter
+	roles
+	("GM" | "PLAYER")[]
+	An optional array of roles needed for the player, defaults to no role needed
+	metadata
+	KeyFilter[]
+	An optional array of filters to run on the current tool metadata
+	________________
+
+
+ToolModeFilter
+A filter to use for a tool mode.
+Extends ToolFilter.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	target
+	KeyFilter[]
+	An optional array of filters to run on the current target of a tool mode
+	dragging
+	boolean
+	An optional boolean to check the dragging state of the current tool mode
+	________________
+
+
+ToolCursor
+A cursor to use for a tool mode.
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	cursor
+	string
+	A css cursor string e.g. "pointer"
+	filter
+	ToolModeFilter
+	An optional filter to run on the current tool mode
+
+
+	
+
+Control the viewport of the current scene.
+The viewport represents this players view of the current scene.
+Reference
+Methods
+reset
+async reset()
+Reset the viewport to the initial view.
+If no map exists in the scene this will be the origin. If a map exists the viewport will fit to this map.
+Returns a ViewportTransform with the transform it was reset to.
+________________
+
+
+animateTo
+async animateTo(transform)
+Animate the viewport to the given transform.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	transform
+	ViewportTransform
+	The new transform to animate to
+	________________
+
+
+animateToBounds
+async animateTo(bounds)
+Animate the viewport to the given bounding box.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	bounds
+	BoundingBox
+	The bounding box to animate to
+	Example
+Zoom on to the selected items when clicking a context menu item
+OBR.contextMenu.create({
+ id: "rodeo.owlbear.example",
+ icons: [
+   {
+     icon: "icon.svg",
+     label: "Example",
+   },
+ ],
+ async onClick(context) {
+   OBR.viewport.animateToBounds(context.selectionBounds);
+ },
+});
+________________
+
+
+getPosition
+async getPosition()
+Get the current position of the viewport.
+Returns a Vector2.
+________________
+
+
+setPosition
+async setPosition(position)
+Set the position of the viewport.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	position
+	Vector2
+	The new position of the viewport
+	________________
+
+
+getScale
+async getScale()
+Get the current scale of the viewport.
+A scale of 1 represents a 1:1 scale.
+Returns a number.
+________________
+
+
+setScale
+async setScale(scale)
+Set the scale of the viewport.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	scale
+	number
+	The new scale of the viewport
+	________________
+
+
+getWidth
+async getWidth()
+Get the width of the viewport.
+Returns a number.
+________________
+
+
+getHeight
+async getHeight()
+Get the height of the viewport.
+Returns a number.
+________________
+
+
+transformPoint
+async transformPoint(point)
+Transform a point from the viewport coordinate space into the screens coordinate space.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	point
+	Vector2
+	The point to transform
+	Returns a Vector2.
+________________
+
+
+inverseTransformPoint
+async inverseTransformPoint(point)
+Transform a point from the screens coordinate space into the viewport coordinate space.
+Parameters
+NAME
+	TYPE
+	DESCRIPTION
+	point
+	Vector2
+	The point to transform
+	Returns a Vector2.
+________________
+
+
+Type Definitions
+ViewportTransform
+TYPE
+	object
+	Properties
+NAME
+	TYPE
+	DESCRIPTION
+	position
+	Vector2
+	The position of the viewport
+	scale
+	number
+	The scale of the viewport

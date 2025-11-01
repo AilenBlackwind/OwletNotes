@@ -1,22 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import MDEditor from '@uiw/react-md-editor';
 
 declare const OBR: any;
 
 const METADATA_KEY = "com.example.token-notes/metadata";
-
-// Simple markdown to HTML converter
-const simpleMarkdownToHTML = (text: string): string => {
-  return text
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-    .replace(/`(.*?)`/gim, '<code>$1</code>')
-    .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
-    .replace(/\n$/gim, '<br />')
-    .replace(/\n/gim, '<br />');
-};
 
 const App: React.FC = () => {
   const [notes, setNotes] = useState('');
@@ -156,22 +143,24 @@ const App: React.FC = () => {
       <div className="flex-grow bg-white border border-slate-300 rounded-md overflow-hidden mb-4">
         {!isEditing ? (
           <div className="p-3 h-full overflow-auto">
-            {notes ? (
-              <div
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: simpleMarkdownToHTML(notes) }}
-              />
-            ) : (
-              <p className="text-slate-500 italic">No notes for this token yet. Click Edit to add content.</p>
-            )}
+            <div className="prose prose-sm max-w-none">
+              {notes ? (
+                <MDEditor.Markdown source={notes} />
+              ) : (
+                <p className="text-slate-500 italic">No notes for this token yet. Click Edit to add content.</p>
+              )}
+            </div>
           </div>
         ) : (
-          <textarea
+          <MDEditor
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add notes for this token...\n\nYou can use:\n# Header\n## Subheader\n### Sub-subheader\n**bold text**\n*italic text*\n`code`\n> quote"
-            className="w-full h-full p-3 border-none outline-none resize-none font-mono text-sm"
-            style={{ fontFamily: 'Monaco, Consolas, "Courier New", monospace' }}
+            onChange={(value) => setNotes(value || '')}
+            height={400}
+            preview="edit"
+            textareaProps={{
+              placeholder: "Add notes for this token...",
+            }}
+            data-color-mode="light"
           />
         )}
       </div>
