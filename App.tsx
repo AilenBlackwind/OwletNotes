@@ -57,68 +57,141 @@ const App: React.FC = () => {
 
   // Effect to initialize and load data
   useEffect(() => {
-    if (typeof OBR === 'undefined' || !OBR.isReady) {
-      console.warn("OBR SDK not found or not ready. Running in standalone mode.");
+    if (typeof OBR === 'undefined') {
+      console.warn("OBR SDK not found. Running in standalone mode.");
       setStatus('idle');
       setHasDirectPermissions(true);
       return;
     }
 
-    OBR.onReady(() => {
-      setIsReady(true);
-      
-      Promise.all([
-        OBR.player.getSelection(),
-        OBR.player.getRole(),
-        OBR.player.getId(),
-      ]).then(([selection, role, playerId]) => {
-        if (selection && selection.length === 1) {
+    const initializeApp = async () => {
+      try {
+        await OBR.onReady();
+        setIsReady(true);
+        
+        // Get initial selection
+        const selection = await OBR.player.getSelection();
+        const role = await OBR.player.getRole();
+        const playerId = await OBR.player.getId();
+        
+        console.log("OBR initialized:", { selection, role, playerId });
+        
+        if (selection && selection.length > 0) {
+          // Handle multiple selections - take the first one
           const currentItemId = selection[0];
           setSelectedItemId(currentItemId);
-          OBR.scene.items.getItems([currentItemId]).then((items: any[]) => {
-            if (items.length === 1) {
-              const item = items[0];
-              updateStateFromItem(item);
-              const isOwner = item.createdUserId === playerId;
-              const isGM = role === 'GM';
-              setHasDirectPermissions(isGM || isOwner);
-            }
-            setStatus('idle');
-          });
-        } else {
-          setStatus('idle');
+          await loadItemData(currentItemId, playerId, role);
         }
-      });
-    });
+        
+        setStatus('idle');
+      } catch (error) {
+        console.error("Failed to initialize OBR:", error);
+        setStatus('idle');
+        setHasDirectPermissions(true);
+      }
+    };
+
+    initializeApp();
   }, [updateStateFromItem]);
 
-  // Effect for real-time updates
-  useEffect(() => {
-    if (!isReady || !selectedItemId) return;
-
-    const handleItemChange = (items: any[]) => {
-      const changedItem = items.find(item => item.id === selectedItemId);
-      if (changedItem) {
-        updateStateFromItem(changedItem);
+  const loadItemData = useCallback(async (itemId: string, playerId: string, role: string) => {
+    try {
+      const items = await OBR.scene.items.getItems([itemId]);
+      if (items.length === 1) {
+        const item = items[0];
+        console.log("Loaded item data:", item);
+        updateStateFromItem(item);
+        const isOwner = item.createdUserId === playerId;
+        const isGM = role === 'GM';
+        setHasDirectPermissions(isGM || isOwner);
       }
+    } catch (error) {
+      console.error("Failed to load item data:", error);
+    }
+  }, [updateStateFromItem]);
+
+  // Effect for selection changes and real-time updates
+  useEffect(() => {
+    if (!isReady) return;
+
+    // Listen for item changes (includes selection changes)
+    const handleItemChange = (items: any[]) => {
+      console.log("Scene items changed:", items.length);
+      
+      // Check if our selected item was modified
+      if (selectedItemId) {
+        const changedItem = items.find(item => item.id === selectedItemId);
+        if (changedItem) {
+          console.log("Selected item changed, updating display:", changedItem);
+          updateStateFromItem(changedItem);
+        }
+      }
+      
+      // Also check for selection changes by monitoring all items
+      OBR.player.getSelection().then((selection: string[]) => {
+        if (selection && selection.length > 0) {
+          const currentItemId = selection[0];
+          if (currentItemId !== selectedItemId) {
+            console.log("Selection changed to:", currentItemId);
+            setSelectedItemId(currentItemId);
+            OBR.player.getId().then((playerId: string) => {
+              OBR.player.getRole().then((role: string) => {
+                loadItemData(currentItemId, playerId, role);
+              });
+            });
+          }
+        } else if (selectedItemId && (!selection || selection.length === 0)) {
+          // No selection - clear the interface
+          console.log("No selection detected");
+          setSelectedItemId(null);
+          setNotes('');
+          setIsLocked(false);
+          setHasDirectPermissions(false);
+        }
+      });
     };
 
-    const unsubscribe = OBR.scene.items.onChange(handleItemChange);
+    const unsubscribeItems = OBR.scene.items.onChange(handleItemChange);
+    
+    // Poll for selection changes every 500ms to ensure we catch selection changes
+    const selectionPollInterval = setInterval(() => {
+      OBR.player.getSelection().then((selection: string[]) => {
+        if (selection && selection.length > 0) {
+          const currentItemId = selection[0];
+          if (currentItemId !== selectedItemId) {
+            console.log("Polled selection change:", currentItemId);
+            setSelectedItemId(currentItemId);
+            OBR.player.getId().then((playerId: string) => {
+              OBR.player.getRole().then((role: string) => {
+                loadItemData(currentItemId, playerId, role);
+              });
+            });
+          }
+        } else if (selectedItemId && (!selection || selection.length === 0)) {
+          console.log("Polled no selection");
+          setSelectedItemId(null);
+          setNotes('');
+          setIsLocked(false);
+          setHasDirectPermissions(false);
+        }
+      });
+    }, 500);
     
     return () => {
-      // Assuming onChange returns an unsubscribe function as is best practice.
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (typeof unsubscribeItems === 'function') {
+        unsubscribeItems();
       }
+      clearInterval(selectionPollInterval);
     };
-  }, [isReady, selectedItemId, updateStateFromItem]);
+  }, [isReady, selectedItemId, updateStateFromItem, loadItemData]);
 
-  // Effect for handling edit requests
+  // Effect for handling edit requests and player changes
   useEffect(() => {
     if (!isReady) return;
 
     const handleBroadcast = (message: {data: any, connectionId: number}) => {
       const { tokenId, newNotes, requester } = message.data;
+      console.log("Received broadcast message:", { tokenId, newNotes, requester });
       
       OBR.player.getId().then((playerId: string) => {
         if (requester === playerId) return;
@@ -129,10 +202,11 @@ const App: React.FC = () => {
         ]).then(([role, items]) => {
           if (items.length === 1) {
             const item = items[0];
-            const metadata = item.metadata[METADATA_KEY] as { isLocked?: boolean } || {};
+            const metadata = item.metadata?.[METADATA_KEY] as { isLocked?: boolean } || {};
             
             // Security check: ignore requests for locked notes
             if (metadata.isLocked) {
+              console.log("Ignoring edit request - note is locked");
               return;
             }
 
@@ -140,24 +214,55 @@ const App: React.FC = () => {
             const isGM = role === 'GM';
 
             if (isGM || isOwner) {
+              console.log("Permission granted, updating item:", { isOwner, isGM });
               OBR.scene.items.updateItems([tokenId], (itemsToUpdate: any[]) => {
                 if (itemsToUpdate.length === 1) {
                   const itemToUpdate = itemsToUpdate[0];
+                  if (!itemToUpdate.metadata) {
+                    itemToUpdate.metadata = {};
+                  }
                   if (!itemToUpdate.metadata[METADATA_KEY]) {
                      itemToUpdate.metadata[METADATA_KEY] = {};
                   }
                   (itemToUpdate.metadata[METADATA_KEY] as any).notes = newNotes;
+                  console.log("Updated item via broadcast:", itemToUpdate.metadata[METADATA_KEY]);
                 }
               });
+            } else {
+              console.log("Permission denied for broadcast update");
             }
           }
         });
       });
     };
     
-    return OBR.broadcast.onMessage(BROADCAST_CHANNEL, handleBroadcast);
+    const unsubscribeBroadcast = OBR.broadcast.onMessage(BROADCAST_CHANNEL, handleBroadcast);
 
-  }, [isReady]);
+    // Listen for player changes
+    const handlePlayerChange = (player: any) => {
+      console.log("Player changed:", player);
+      // Refresh permissions when player changes
+      if (selectedItemId) {
+        OBR.player.getId().then((playerId: string) => {
+          OBR.player.getRole().then((role: string) => {
+            loadItemData(selectedItemId, playerId, role);
+          });
+        });
+      }
+    };
+
+    const unsubscribePlayer = OBR.player.onChange(handlePlayerChange);
+    
+    return () => {
+      if (typeof unsubscribeBroadcast === 'function') {
+        unsubscribeBroadcast();
+      }
+      if (typeof unsubscribePlayer === 'function') {
+        unsubscribePlayer();
+      }
+    };
+
+  }, [isReady, selectedItemId, loadItemData]);
 
 
   const handleLockToggle = async () => {
@@ -184,36 +289,59 @@ const App: React.FC = () => {
   const handleSave = async () => {
     if (status === 'saving' || !isReady || !selectedItemId || !canCurrentlyEdit) return;
     
+    console.log("Saving notes for item:", selectedItemId, { notes, isLocked });
     setStatus('saving');
 
-    if (hasDirectPermissions) {
-      await OBR.scene.items.updateItems([selectedItemId], (items: any[]) => {
-        if (items.length === 1) {
-          const item = items[0];
-          if (!item.metadata[METADATA_KEY]) {
-             item.metadata[METADATA_KEY] = {};
+    try {
+      if (hasDirectPermissions) {
+        await OBR.scene.items.updateItems([selectedItemId], (items: any[]) => {
+          if (items.length === 1) {
+            const item = items[0];
+            if (!item.metadata) {
+              item.metadata = {};
+            }
+            if (!item.metadata[METADATA_KEY]) {
+              item.metadata[METADATA_KEY] = {};
+            }
+            (item.metadata[METADATA_KEY] as any).notes = notes;
+            (item.metadata[METADATA_KEY] as any).isLocked = isLocked;
+            console.log("Updated item metadata:", item.metadata[METADATA_KEY]);
           }
-          (item.metadata[METADATA_KEY] as any).notes = notes;
-          (item.metadata[METADATA_KEY] as any).isLocked = isLocked;
-        }
-      });
-    } else {
-      const playerId = await OBR.player.getId();
-      await OBR.broadcast.sendMessage({
-        channel: BROADCAST_CHANNEL,
-        data: {
-          tokenId: selectedItemId,
-          newNotes: notes,
-          requester: playerId,
-        },
-      });
-    }
+        });
+        
+        // Verify the save by re-reading the item
+        setTimeout(async () => {
+          try {
+            const items = await OBR.scene.items.getItems([selectedItemId]);
+            if (items.length === 1) {
+              const savedNotes = items[0].metadata?.[METADATA_KEY]?.notes || '';
+              console.log("Verified saved notes:", savedNotes);
+            }
+          } catch (error) {
+            console.error("Failed to verify save:", error);
+          }
+        }, 100);
+      } else {
+        const playerId = await OBR.player.getId();
+        await OBR.broadcast.sendMessage({
+          channel: BROADCAST_CHANNEL,
+          data: {
+            tokenId: selectedItemId,
+            newNotes: notes,
+            requester: playerId,
+          },
+        });
+      }
 
-    setStatus('saved');
-    setTimeout(() => {
+      setStatus('saved');
+      setTimeout(() => {
+        setStatus('idle');
+        setIsEditing(false); // Auto-return to preview mode after saving
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to save notes:", error);
       setStatus('idle');
-      setIsEditing(false); // Auto-return to preview mode after saving
-    }, 2000);
+    }
   };
 
   if (status === 'loading') {
