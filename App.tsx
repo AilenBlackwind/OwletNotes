@@ -57,62 +57,71 @@ const App: React.FC = () => {
     }
   };
 
-  // Initialize the extension
+  // Initialize the extension with robust OBR API detection
   useEffect(() => {
     const init = async () => {
       console.log("=== EXTENSION INIT START ===");
-      console.log("typeof (window as any).OBR:", typeof (window as any).OBR);
-      console.log("(window as any).OBR object:", (window as any).OBR);
+      console.log("typeof OBR:", typeof (window as any).OBR);
+      console.log("(window as any).OBR:", (window as any).OBR);
       console.log("location.href:", window.location.href);
+      console.log("obrref present:", window.location.href.includes('obrref'));
       
-      // Check for OBR API using window object to avoid ReferenceError
-      const obbr = (window as any).OBR;
-      if (typeof obbr === 'undefined') {
-        console.log("❌ OBR API not detected - running standalone");
-        setStatus('idle');
-        return;
-      }
-
-      try {
-        console.log("✅ OBR API detected - initializing extension...");
-        console.log("OBR properties:", Object.keys(obbr));
+      // Wait for OBR API with timeout and retry
+      let retryCount = 0;
+      const maxRetries = 50; // 5 seconds total
+      
+      while (retryCount < maxRetries) {
+        const obbr = (window as any).OBR;
         
-        // Check if we have the required methods
-        if (!obbr.onReady || !obbr.contextMenu || !obbr.scene || !obbr.player) {
-          console.error("❌ OBR API incomplete - missing required methods");
-          setStatus('idle');
-          return;
+        if (typeof obbr !== 'undefined' && obbr && typeof obbr === 'object') {
+          console.log(`✅ OBR API detected after ${retryCount} retries`);
+          console.log("OBR properties:", Object.keys(obbr));
+          
+          try {
+            // Check for required methods
+            if (obbr.onReady && obbr.contextMenu && obbr.scene && obbr.player) {
+              console.log("✅ OBR API methods available");
+              
+              // Initialize with OBR.onReady
+              await obbr.onReady();
+              console.log("✅ OBR.onReady completed!");
+              
+              // Set up context menu
+              await setupContextMenu();
+              
+              // Check for context menu action parameters
+              const urlParams = new URLSearchParams(window.location.search);
+              const action = urlParams.get('action');
+              const tokenId = urlParams.get('tokenId');
+              
+              if (action === 'edit-notes' && tokenId) {
+                console.log("📝 Opening notes editor for token:", tokenId);
+                setSelectedItemId(tokenId);
+                await loadTokenNotes(tokenId);
+              }
+              
+              console.log("=== EXTENSION INIT COMPLETE ===");
+              setStatus('idle');
+              return;
+            } else {
+              console.log("❌ OBR API incomplete - missing required methods");
+              console.log("Available methods:", Object.keys(obbr));
+            }
+          } catch (error) {
+            console.error("❌ Error during OBR initialization:", error);
+          }
+          
+          break; // Exit retry loop if OBR API found but failed
         }
         
-        console.log("✅ OBR API methods available");
-        
-        console.log("Calling OBR.onReady...");
-        await obbr.onReady();
-        console.log("✅ OBR.onReady completed!");
-        
-        // Set up context menu for adding notes to tokens
-        console.log("Setting up context menu...");
-        await setupContextMenu();
-        
-        // Check if we're coming from a context menu action
-        const urlParams = new URLSearchParams(window.location.search);
-        const action = urlParams.get('action');
-        const tokenId = urlParams.get('tokenId');
-        
-        if (action === 'edit-notes' && tokenId) {
-          console.log("📝 Opening notes editor for token:", tokenId);
-          setSelectedItemId(tokenId);
-          await loadTokenNotes(tokenId);
-        }
-        
-        console.log("=== EXTENSION INIT COMPLETE ===");
-        setStatus('idle');
-        
-      } catch (error) {
-        console.error("❌ Failed to initialize extension:", error);
-        console.error("Error details:", error.message, error.stack);
-        setStatus('idle');
+        // Wait and retry
+        console.log(`⏳ Waiting for OBR API... (${retryCount + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
       }
+      
+      console.log("❌ OBR API not available after timeout - running standalone");
+      setStatus('idle');
     };
 
     init();
