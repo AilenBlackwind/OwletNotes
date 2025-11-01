@@ -1,3 +1,5 @@
+code
+JSON
 {
   "manifest_version": 2,
   "name": "Token Notes",
@@ -5,13 +7,9 @@
   "action": {
     "title": "Token Notes",
     "icon": "./icon.png",
-"action": {
-  "title": "Token Notes",
-  "icon": "./icon.png",
-  "popover": "./index.html",
-  "width": 300,             
-  "height": 400
-},
+    "popover": "./index.html",
+    "width": 300,
+    "height": 400,
     "modes": [
       {
         "role": "CONTEXT",
